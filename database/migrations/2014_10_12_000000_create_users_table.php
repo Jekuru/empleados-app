@@ -21,7 +21,7 @@ class CreateUsersTable extends Migration
             $table->string('password');
             $table->enum('role', ['users', 'hr', 'directive']);
             $table->integer('salary');
-            $table->string('biography')->nullable();
+            $table->string('biography')->nullable()->default(null);
             $table->rememberToken();
             $table->timestamps();
         });
