@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 use App\Models\User;
 
@@ -21,12 +22,13 @@ class UsersController extends Controller
 
         $user->name = $data->name;
         $user->email = $data->email;
-        $user->password = $data->password;        
+        $user->password = $data->password;    
         $user->role = $data->role;      
         $user->salary = $data->salary;
         if(isset($data->biography)){
             $user->biography = $data->biography;
         }
+        $user->api_token = Str::random(60);
 
         // COMPROBAR SI EL EMAIL YA ESTÁ REGISTRADO
         $exists = User::where('email', '=', $data->email)->first();
