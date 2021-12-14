@@ -17,19 +17,19 @@ class checkUserRole
      */
     public function handle(Request $request, Closure $next)
     {
-        // Lógica
+        // COMPRUEBA SI EL ID INTRODUCIDO ES DE UN USUARIO DE RRHH (HR) O DIRECTIVO (DIRECTIVE)
         $response = ["status" => 1, "msg" => ""];
 
-        if($request->has('token')){
-            $token = $request->input('token');
+        if($request->has('id')){
+            $id = $request->input('id');
         } else {
-            $token = "";
+            $id = "";
         }
 
         try {
-            if($token != ""){
+            if($id != ""){
                 $allow = DB::table('users')
-                                ->where('api_token', '=', $token)
+                                ->where('id', '=', $id)
                                 ->whereIn('role', array('hr', 'directive'))
                                 ->first();
 
@@ -41,7 +41,7 @@ class checkUserRole
                 }
             } else {
                 $response["status"] = 2;
-                $response["msg"] = "No se ha proprocionado una llave de usuario.";
+                $response["msg"] = "No se ha proprocionado una id de usuario.";
             }
         }catch(\Exception $e){
             $respuesta["msg"] = $e->getMessage();

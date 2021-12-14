@@ -4,7 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Validator;
+//use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\DB;
 
 use App\Models\User;
 
@@ -76,6 +77,58 @@ class UsersController extends Controller
         }
 
         return response()->json($msg);
+    }
+
+    public function login(Request $req){
+        $response = ["status" => 1, "msg" => ""];
+
+        if($req->has('email')){
+            $email = $req->input('email');
+        } else {
+            $email = "";
+        }
+        if($req->has('pswd')){
+            $pswd = $req->input('pswd');
+        } else {
+            $pswd = "";
+        }
+
+        try {
+            $checkEmail = DB::table('users')
+                            ->where('email', '=', $email)
+                            ->first();
+            $checkPswd = DB::table('users')
+                            ->where('password', '=', $pswd)
+                            ->first();
+            $checkUser = DB::table('users')
+                            ->where('email', '=', $email)
+                            ->where('password', '=', $pswd)
+                            ->first();
+            if(!$checkEmail){
+                $response['status'] = 2;
+                $response['msg'] = "Introduce un email valido";
+            } else if(!$checkPswd || !$checkUser){
+                $response['status'] = 3;
+                $response['msg'] = "Contraseña incorrecta";  
+            } else if ($checkUser){
+                $user = User::find($checkUser->id);
+                $user->api_token = Str::random(60);
+                $user->save();
+                
+                $response['msg'] = "Usuario logeado";
+                $response['query'] = DB::table('users')
+                            ->where('id', '=', $checkUser->id)
+                            ->select('email', 'api_token')
+                            ->get();
+            }
+
+        }catch(\Exception $e){
+            $response['msg'] = $e->getMessage();
+            $response['status'] = 0;
+            $response['msg'] = "Se ha producido un error: ".$e->getMessage();
+        }
+
+        return response()->json($response);
     }
 
     /**
