@@ -4,13 +4,15 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
-//use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
 
 use App\Models\User;
 
 class UsersController extends Controller
 {
+    /**
+     * Registrar un nuevo usuario
+     */
     public function register(Request $req){
 
         $msg = ["status" => 1, "msg" => ""];
@@ -79,6 +81,10 @@ class UsersController extends Controller
         return response()->json($msg);
     }
 
+    /**
+     * Iniciar sesión con un usuario
+     * Genera un TOKEN
+     */
     public function login(Request $req){
         $response = ["status" => 1, "msg" => ""];
 
@@ -129,6 +135,14 @@ class UsersController extends Controller
         }
 
         return response()->json($response);
+    }
+
+    /**
+     * Restablecer contraseña del usuario
+     * Requiere introducir un email, genera una contraseña aleatoria y la envía por correo electrónico
+     */
+    public function resetPassword(Request $req){
+        
     }
 
     /**
