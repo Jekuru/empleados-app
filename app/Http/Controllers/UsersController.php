@@ -29,7 +29,6 @@ class UsersController extends Controller
         if(isset($data->biography)){
             $user->biography = $data->biography;
         }
-        $user->api_token = Str::random(60);
 
         // COMPROBAR ENUM
         if($user->role == 'users' || $user->role == 'hr' || $user->role == 'directive'){
