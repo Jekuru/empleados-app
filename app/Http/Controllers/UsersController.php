@@ -210,6 +210,62 @@ class UsersController extends Controller
     }
 
     /**
+     * Ver un perfil de un usuario de la empresa
+     * Lista nombre, email, puesto, biografía y salario.
+     * Únicamente pueden ver un perfil ajeno los usuarios directivos y de RRHH
+     * Los directivos ven todos los usuarios excepto a otros usuarios directivos.
+     * RRHH ve a todos los usuarios excepto a otros usuarios de RRHH y directivos.
+     * El usuario directivo o de RRHH puede ver su propio perfil
+     */
+    public function view(Request $req){
+        $response = ["status" => 1, "msg" => ""];
+
+        if($req->has('token')){
+            $token = $req->input('token');
+        } else {
+            $token = "";
+        }
+        if($req->has('profileId')){
+            $profileId = $req->input('profileId');
+        } else {
+            $profileId = "";
+        }
+        
+        try {
+            $user = User::where('api_token', $req->token)->first();
+            $profile = User::where('id', $profileId)->first();
+
+            if ($user->role == "directive"){
+                if($profile->role != "directive" || $profile->id == $user->id){
+                    $query = User::where('id', $profileId)
+                                    ->select('name', 'email', 'role', 'biography', 'salary')
+                                    ->first();
+                    $response['msg'] = $query;
+                } else {
+                    $response['status'] = 3;
+                    $response['msg'] = "Acceso denegado.";
+                }
+            } else {
+                if($profile->role != "hr" && $profile->role != "directive" || $profile->id == $user->id){
+                    $query = User::where('id', $profileId)
+                                    ->select('name', 'email', 'role', 'biography', 'salary')
+                                    ->first();
+                    $response['msg'] = $query;
+                } else {
+                    $response['status'] = 3;
+                    $response['msg'] = "Acceso denegado.";
+                }                        
+            }
+            
+        } catch(\Exception $e){
+            $response['msg'] = $e->getMessage();
+            $response['status'] = 0;
+            $response['msg'] = "Se ha producido un error: ".$e->getMessage();
+        }
+        return response()->json($response); 
+    }
+
+    /**
      * Comprobar si la contraseña es segura
      * Param: $password -> string
      */
