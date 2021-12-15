@@ -17,19 +17,19 @@ class checkUserRole
      */
     public function handle(Request $request, Closure $next)
     {
-        // COMPRUEBA SI EL ID INTRODUCIDO ES DE UN USUARIO DE RRHH (HR) O DIRECTIVO (DIRECTIVE)
-        $response = ["status" => 1, "msg" => ""];
+        // COMPRUEBA SI EL TOKEN INTRODUCIDO ES DE UN USUARIO DE UN USUARIO DE RRHH (HR) O DIRECTIVO (DIRECTIVE)
+        $response = ["status" => 1, "msg" => "Error en middleware"];
 
-        if($request->has('id')){
-            $id = $request->input('id');
+        if($request->has('token')){
+            $token = $request->input('token');
         } else {
-            $id = "";
+            $token = "";
         }
 
         try {
-            if($id != ""){
+            if($token != ""){
                 $allow = DB::table('users')
-                                ->where('id', '=', $id)
+                                ->where('api_token', '=', $token)
                                 ->whereIn('role', array('hr', 'directive'))
                                 ->first();
 
@@ -41,7 +41,7 @@ class checkUserRole
                 }
             } else {
                 $response["status"] = 2;
-                $response["msg"] = "No se ha proprocionado una id de usuario.";
+                $response["msg"] = "Inicie sesion para acceder a esta funcion.";
             }
         }catch(\Exception $e){
             $respuesta["msg"] = $e->getMessage();

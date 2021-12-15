@@ -12,6 +12,7 @@ class UsersController extends Controller
 {
     /**
      * Registrar un nuevo usuario
+     * Únicamente pueden registrar nuevos usuarios los directivos y RRHH, gestionado por Middleware "checkUserRole"
      */
     public function register(Request $req){
 
@@ -140,9 +141,72 @@ class UsersController extends Controller
     /**
      * Restablecer contraseña del usuario
      * Requiere introducir un email, genera una contraseña aleatoria y la envía por correo electrónico
+     * TODO: Enviar correo electrónico
      */
     public function resetPassword(Request $req){
+        $response = ["status" => 1, "msg" => ""];
+
+        if($req->has('email')){
+            $email = $req->input('email');
+        } else {
+            $email = "";
+        }
+
+        $user = User::where('email', $req->email)->first();
+
+        if($user){
+            $user->password = Str::random(12);
+            $user -> save();
+
+            // TODO: Enviar por email la contraseña
+
+            $response["msg"] = "Se ha enviado una nueva contraseña temporal por email."; 
+            return response()->json($response);
+        } else {
+            $response["status"] = 2;
+            $response["msg"] = "No se ha encontrado el correo electronico introducido."; 
+            return response()->json($response);
+        }
+    }
+
+    /**
+     * Listar todos los usuarios de la empresa
+     * Únicamente puden listar usuarios los directivos y RRHH, gestionado por Middlware "checkUserRole"
+     * Directivos ven a todos los usuarios excepto a otros directivos
+     * RRHH ven a todos los usuarios excepto los de RRHH y directivos
+     */
+    public function list(Request $req){
+        $response = ["status" => 1, "msg" => ""];
+
+        if($req->has('token')){
+            $token = $req->input('token');
+        } else {
+            $token = "";
+        }
         
+        try {
+            $user = User::where('api_token', $req->token)->first();
+
+            if ($user->role == "directive"){
+                $query = DB::table('users')
+                            ->select('name', 'role', 'salary')
+                            ->whereIn('role', array('users', 'hr'))
+                            ->get();
+                $response["status"] = 2;
+            } else {
+                $query = DB::table('users')
+                            ->select('name', 'role', 'salary')
+                            ->where('role', '=', 'users')
+                            ->get();
+                $response["status"] = 3;                            
+            }
+            $response['msg'] = $query;
+        } catch(\Exception $e){
+            $response['msg'] = $e->getMessage();
+            $response['status'] = 0;
+            $response['msg'] = "Se ha producido un error: ".$e->getMessage();
+        }
+        return response()->json($response); 
     }
 
     /**

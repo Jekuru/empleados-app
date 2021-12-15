@@ -24,6 +24,8 @@ Route::prefix('users')->group(function(){
     Route::put('/register', [UsersController::class, 'register'])->middleware('check-user');
     Route::get('/login', [UsersController::class, 'login']);
     Route::post('/resetpassword', [UsersController::class, 'resetpassword']);
-    Route::get('/list', [UsersController::class, 'list']);
+    Route::get('/list', [UsersController::class, 'list'])->middleware('check-user');
     Route::get('/view', [UsersController::class, 'view']);
+    Route::get('/profile', [UsersController::class, 'profile']);
+    Route::post('/modify', [UsersController::class, 'modify'])->middleware('check-user');
 });
