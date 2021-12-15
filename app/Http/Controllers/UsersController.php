@@ -266,6 +266,123 @@ class UsersController extends Controller
     }
 
     /**
+     * Ver perfil propio
+     * Lista nombre, email, rol, salario y biografía.
+     * Es necesario haber iniciado sesión (tener un api_token activo).
+     */
+    public function profile(Request $req){
+        $response = ["status" => 1, "msg" => ""];
+
+        if($req->has('token')){
+            $token = $req->input('token');
+        } else {
+            $token = "";
+        }
+        
+        try {
+            $user = User::where('api_token', $req->token)->first();
+
+            if ($user->api_token){
+                $response['msg'] = DB::table('users')
+                            ->select('name', 'email', 'role', 'salary', 'biography')
+                            ->where('api_token', '=', $token)
+                            ->get();
+            } else {
+                $response['status'] = 3;
+                $response['msg'] = "Inicie sesion antes de utilizar esta funcion.";
+                echo "Hola";
+            }                        
+        } catch(\Exception $e){
+            $response['msg'] = $e->getMessage();
+            $response['status'] = 0;
+            $response['msg'] = "Se ha producido un error: ".$e->getMessage();
+        }
+
+        return response()->json($response); 
+    }
+
+    public function modify(Request $req){
+        $response = ["status" => 1, "msg" => ""];
+
+        if($req->has('token')){
+            $token = $req->input('token');
+        } else {
+            $token = "";
+        }
+        if($req->has('user')){
+            $user = $req->input('user');
+        } else {
+            $user = "";
+        }
+
+
+        
+        
+        // Buscar el usuario que va a realizar la modificación
+        $modifier = User::where('api_token', $token)->first();
+
+        // Buscar el usuario a modificar
+        $user = User::where('id', $req->user)->first();
+
+        $data = $req->getContent();
+        $data = json_decode($data);
+
+        try {
+            if(isset($user) && isset($modifier)){
+                if (($modifier->role == "directive" && $user->role == "directive")
+                || ($modifier->role == "hr" && $user->role == "hr")
+                || ($modifier->role == "hr" && $user->role == "directive")){
+                    $response['status'] = 3;
+                    $response['msg'] = "Acceso denegado, no se pueden modificar usuarios con un rol superior o igual al tuyo.";
+                } else {
+                    $dataChanged = false;
+         
+                    if(isset($data->name)){
+                        $user->name = $data->name;
+                        $dataChanged = true;
+                     }
+
+                    if(isset($data->email)){
+                        $user->email = $data->email;
+                        $dataChanged = true;
+                    }
+
+                    if(isset($data->salary)){
+                        $user->salary = $data->salary;
+                        $dataChanged = true;
+                    }
+
+                    if(isset($data->biography)){
+                        $user->biography = $data->biography;
+                        $dataChanged = true;
+                    }
+
+                    if ($dataChanged){
+                        $user->save();
+                        $response['msg'] = "Usuario modificado correctamente";
+                    } else {
+                        $response["msg"] = "No se modificaron datos";
+                    }
+                }
+        } else if (!isset($modifier)){
+            $response['status'] = 2;
+            $response['msg'] = "Debes iniciar sesión para utilizar esta función.";
+        } else if (!isset($user)){
+            $response['status'] = 2;
+            $response['msg'] = "Introduce un usuario a modificar correcto.";
+        }
+
+
+        } catch(\Exception $e){
+            $response['msg'] = $e->getMessage();
+            $response['status'] = 0;
+            $response['msg'] = "Se ha producido un error: ".$e->getMessage();
+        }
+
+        return response()->json($response); 
+    }
+
+    /**
      * Comprobar si la contraseña es segura
      * Param: $password -> string
      */
