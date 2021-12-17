@@ -154,29 +154,27 @@ class UsersController extends Controller
         }
 
         $user = User::where('email', $req->email)->first();
-
-        if($user){
-            $user->password = Str::random(12);
-            
-            // Enviar por email la nueva contraseña "temporal"
-            Mail::to($user->email)->send(new ResetPassword("Restablecer contraseña empleados-app",
-                    "Nueva contraseña temporal", [
-                        "Hola, " .$user->name,
-                        "Tu nueva contraseña es: " .$user->password,
-                        "Al iniciar sesión nuevamente con esta contraseña se solicitará su cambio por una nueva.",
-                        "Un saludo."
-                    ]));
-            $user -> save();
-            $response["msg"] = "Se ha enviado una nueva contraseña temporal por email."; 
-            return response()->json($response);
-        } else {
-            $response["status"] = 2;
-            $response["msg"] = "No se ha encontrado el correo electronico introducido."; 
-            return response()->json($response);
-        }
         
-        try{
-
+        try{      
+            if($user){
+                $user->password = Str::random(12);
+                
+                // Enviar por email la nueva contraseña "temporal"
+                Mail::to($user->email)->send(new ResetPassword("Restablecer contraseña empleados-app",
+                        "Nueva contraseña temporal", [
+                            "Hola, " .$user->name,
+                            "Tu nueva contraseña es: " .$user->password,
+                            "Al iniciar sesión nuevamente con esta contraseña se solicitará su cambio por una nueva.",
+                            "Un saludo."
+                        ]));
+                $user -> save();
+                $response["msg"] = "Se ha enviado una nueva contraseña temporal por email."; 
+                return response()->json($response);
+            } else {
+                $response["status"] = 2;
+                $response["msg"] = "No se ha encontrado el correo electronico introducido."; 
+                return response()->json($response);
+            }
         }catch(\Exception $e){
             $response['msg'] = $e->getMessage();
             $response['status'] = 0;
