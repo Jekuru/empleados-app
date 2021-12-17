@@ -314,9 +314,6 @@ class UsersController extends Controller
         } else {
             $user = "";
         }
-
-
-        
         
         // Buscar el usuario que va a realizar la modificación
         $modifier = User::where('api_token', $token)->first();
@@ -329,14 +326,20 @@ class UsersController extends Controller
 
         try {
             if(isset($user) && isset($modifier)){
+                
                 if (($modifier->role == "directive" && $user->role == "directive")
                 || ($modifier->role == "hr" && $user->role == "hr")
                 || ($modifier->role == "hr" && $user->role == "directive")){
+                    $permission = false;
                     $response['status'] = 3;
                     $response['msg'] = "Acceso denegado, no se pueden modificar usuarios con un rol superior o igual al tuyo.";
                 } else {
-                    $dataChanged = false;
-         
+                    $permission = true;
+                }
+                if($modifier->id == $user->id){
+                    $permission = true;
+                }
+                if($permission){
                     if(isset($data->name)){
                         $user->name = $data->name;
                         $dataChanged = true;
@@ -364,16 +367,14 @@ class UsersController extends Controller
                         $response["msg"] = "No se modificaron datos";
                     }
                 }
-        } else if (!isset($modifier)){
-            $response['status'] = 2;
-            $response['msg'] = "Debes iniciar sesión para utilizar esta función.";
-        } else if (!isset($user)){
-            $response['status'] = 2;
-            $response['msg'] = "Introduce un usuario a modificar correcto.";
-        }
-
-
-        } catch(\Exception $e){
+            } else if (!isset($modifier)){
+                $response['status'] = 2;
+                $response['msg'] = "Debes iniciar sesión para utilizar esta función.";
+            } else if (!isset($user)){
+                $response['status'] = 2;
+                $response['msg'] = "Introduce un usuario a modificar correcto.";
+            }
+        }catch(\Exception $e){
             $response['msg'] = $e->getMessage();
             $response['status'] = 0;
             $response['msg'] = "Se ha producido un error: ".$e->getMessage();
